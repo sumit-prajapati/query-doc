@@ -1,4 +1,5 @@
 import streamlit as st
+import google.generativeai as genai
 from agents import CVParserAgent, DataCollectionAgent, JDAnalysisAgent, ResumeContentAgent, CoverLetterAgent, FormattingAgent
 
 # Page title
@@ -9,15 +10,20 @@ st.write("Welcome to the AI-powered Resume and Cover Letter Generator! Fill in y
 
 # Add a text input for the Gemini API key
 gemini_api_key = st.text_input("Enter your Gemini API Key", type="password")
+if gemini_api_key:
+    genai.configure(api_key=gemini_api_key)
 
 # CV Uploader
 st.header("Upload your CV")
 uploaded_file = st.file_uploader("Choose a file (.pdf or .docx)", type=["pdf", "docx"])
 
 if uploaded_file is not None and "cv_data" not in st.session_state:
-    with st.spinner("Parsing your CV..."):
-        cv_parser = CVParserAgent()
-        st.session_state.cv_data = cv_parser.parse_cv(uploaded_file, gemini_api_key)
+    if not gemini_api_key:
+        st.error("Please enter your Gemini API Key to parse the CV.")
+    else:
+        with st.spinner("Parsing your CV..."):
+            cv_parser = CVParserAgent()
+            st.session_state.cv_data = cv_parser.parse_cv(uploaded_file)
 
 # User Inputs
 st.header("Your Information")
@@ -53,10 +59,10 @@ if st.button("Generate Resume and Cover Letter"):
 
         # 3. Content Generation
         resume_content_agent = ResumeContentAgent()
-        resume_content = resume_content_agent.generate(user_data, jd_analysis, gemini_api_key)
+        resume_content = resume_content_agent.generate(user_data, jd_analysis)
 
         cover_letter_agent = CoverLetterAgent()
-        cover_letter_content = cover_letter_agent.generate(user_data, jd_analysis, job_title, gemini_api_key)
+        cover_letter_content = cover_letter_agent.generate(user_data, jd_analysis, job_title)
 
         # 4. Formatting
         formatting_agent = FormattingAgent()

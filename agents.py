@@ -7,10 +7,10 @@ import io
 import json
 
 class CVParserAgent:
-    def parse_cv(self, file_bytes, api_key):
+    def parse_cv(self, file_bytes):
         """Extracts text from a CV and uses Gemini to parse it into structured data."""
         text = self._extract_text(file_bytes)
-        return self._parse_text_with_gemini(text, api_key)
+        return self._parse_text_with_gemini(text)
 
     def _extract_text(self, file_bytes):
         """Extracts text from a PDF or DOCX file."""
@@ -37,9 +37,8 @@ class CVParserAgent:
             text += para.text + "\n"
         return text
 
-    def _parse_text_with_gemini(self, text, api_key):
+    def _parse_text_with_gemini(self, text):
         """Uses Gemini to parse the extracted text into a structured JSON object."""
-        genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
         prompt = f"""
         Based on the following CV text, extract the user's information into a JSON object.
@@ -84,9 +83,8 @@ class JDAnalysisAgent:
         }
 
 class ResumeContentAgent:
-    def generate(self, user_data, jd_analysis, api_key):
+    def generate(self, user_data, jd_analysis):
         """Generates tailored resume content based on the user's data and the job description analysis."""
-        genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
         prompt = f"""
         Based on the following user data and job description, generate a professional resume.
@@ -111,9 +109,8 @@ class ResumeContentAgent:
         return response.text
 
 class CoverLetterAgent:
-    def generate(self, user_data, jd_analysis, job_title, api_key):
+    def generate(self, user_data, jd_analysis, job_title):
         """Generates a tailored cover letter."""
-        genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash')
         prompt = f"""
         Based on the following user data and job description, generate a compelling cover letter.
