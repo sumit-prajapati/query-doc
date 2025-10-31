@@ -1,6 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
-from agents import CVParserAgent, DataCollectionAgent, JDAnalysisAgent, ResumeContentAgent, CoverLetterAgent, FormattingAgent
+from agents import CVParserAgent, DataCollectionAgent, JDAnalysisAgent, ResumeContentAgent, CoverLetterAgent, FormattingAgent, LatexContentAgent
 
 # Page title
 st.set_page_config(page_title='AI Resume and Cover Letter Generator', page_icon='🤖')
@@ -15,7 +15,7 @@ if gemini_api_key:
 
 # CV Uploader
 st.header("Upload your CV")
-uploaded_file = st.file_uploader("Choose a file (.pdf or .docx)", type=["pdf", "docx"])
+uploaded_file = st.file_uploader("Choose a file (.pdf, .docx, or .tex)", type=["pdf", "docx", "tex"])
 
 if uploaded_file is not None and "cv_data" not in st.session_state:
     if not gemini_api_key:
@@ -43,6 +43,9 @@ education = st.text_area("Describe your educational background.", value=st.sessi
 st.header("Target Job")
 job_title = st.text_input("Job Title")
 job_description = st.text_area("Paste the Job Description here.")
+
+# LaTeX Output Option
+latex_output = st.checkbox("Generate LaTeX resume")
 
 # Generate Button
 if st.button("Generate Resume and Cover Letter"):
@@ -74,6 +77,13 @@ if st.button("Generate Resume and Cover Letter"):
         st.text(cover_letter_content)
 
         # Export buttons
+        if latex_output:
+            latex_content_agent = LatexContentAgent()
+            latex_resume = latex_content_agent.generate(user_data, jd_analysis)
+            formatting_agent.to_latex(latex_resume, "resume.tex")
+            with open("resume.tex", "rb") as f:
+                st.download_button("Download Resume as LaTeX", f, "resume.tex")
+
         formatting_agent.to_pdf(resume_content, "resume.pdf")
         formatting_agent.to_docx(resume_content, "resume.docx")
         formatting_agent.to_pdf(cover_letter_content, "cover_letter.pdf")

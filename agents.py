@@ -13,13 +13,19 @@ class CVParserAgent:
         return self._parse_text_with_gemini(text)
 
     def _extract_text(self, file_bytes):
-        """Extracts text from a PDF or DOCX file."""
+        """Extracts text from a PDF, DOCX, or LaTeX file."""
         if file_bytes.name.endswith(".pdf"):
             return self._extract_text_from_pdf(file_bytes)
         elif file_bytes.name.endswith(".docx"):
             return self._extract_text_from_docx(file_bytes)
+        elif file_bytes.name.endswith(".tex"):
+            return self._extract_text_from_tex(file_bytes)
         else:
             return ""
+
+    def _extract_text_from_tex(self, file_bytes):
+        """Extracts text from a LaTeX file."""
+        return file_bytes.getvalue().decode("utf-8")
 
     def _extract_text_from_pdf(self, file_bytes):
         """Extracts text from a PDF file."""
@@ -132,6 +138,33 @@ class CoverLetterAgent:
         response = model.generate_content(prompt)
         return response.text
 
+class LatexContentAgent:
+    def generate(self, user_data, jd_analysis):
+        """Generates a tailored resume in LaTeX format."""
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""
+        Based on the following user data and job description, generate a professional resume in LaTeX format that is compatible with Overleaf.
+
+        **User Data:**
+        - Name: {user_data['name']}
+        - Contact Info: {user_data['contact_info']}
+        - LinkedIn: {user_data['linkedin_profile']}
+        - Experience: {user_data['experience']}
+        - Skills: {user_data['skills']}
+        - Education: {user_data['education']}
+
+        **Job Description:**
+        {jd_analysis['requirements']}
+
+        **Instructions:**
+        - The output should be a complete LaTeX document, ready to be compiled in Overleaf.
+        - Use a clean and professional LaTeX template.
+        - Tailor the resume to the job description, highlighting the most relevant skills and experience.
+        - Emphasize achievements and quantifiable results.
+        """
+        response = model.generate_content(prompt)
+        return response.text
+
 class FormattingAgent:
     def to_pdf(self, text, filename):
         pdf = FPDF()
@@ -145,3 +178,7 @@ class FormattingAgent:
         document = Document()
         document.add_paragraph(text)
         document.save(filename)
+
+    def to_latex(self, text, filename):
+        with open(filename, "w") as f:
+            f.write(text)
