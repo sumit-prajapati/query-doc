@@ -2,6 +2,62 @@ import google.generativeai as genai
 from docx import Document
 from fpdf import FPDF
 import re
+import PyPDF2
+import io
+import json
+
+class CVParserAgent:
+    def parse_cv(self, file_bytes, api_key):
+        """Extracts text from a CV and uses Gemini to parse it into structured data."""
+        text = self._extract_text(file_bytes)
+        return self._parse_text_with_gemini(text, api_key)
+
+    def _extract_text(self, file_bytes):
+        """Extracts text from a PDF or DOCX file."""
+        if file_bytes.name.endswith(".pdf"):
+            return self._extract_text_from_pdf(file_bytes)
+        elif file_bytes.name.endswith(".docx"):
+            return self._extract_text_from_docx(file_bytes)
+        else:
+            return ""
+
+    def _extract_text_from_pdf(self, file_bytes):
+        """Extracts text from a PDF file."""
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_bytes.read()))
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+        return text
+
+    def _extract_text_from_docx(self, file_bytes):
+        """Extracts text from a DOCX file."""
+        document = Document(io.BytesIO(file_bytes.read()))
+        text = ""
+        for para in document.paragraphs:
+            text += para.text + "\n"
+        return text
+
+    def _parse_text_with_gemini(self, text, api_key):
+        """Uses Gemini to parse the extracted text into a structured JSON object."""
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        prompt = f"""
+        Based on the following CV text, extract the user's information into a JSON object.
+        The JSON object should have the following keys: "full_name", "contact_info", "linkedin_profile", "experience", "skills", "education".
+
+        CV Text:
+        {text}
+
+        JSON Output:
+        """
+        response = model.generate_content(prompt)
+        # Clean the response to ensure it's valid JSON
+        cleaned_response = response.text.strip().replace("```json", "").replace("```", "")
+        try:
+            return json.loads(cleaned_response)
+        except json.JSONDecodeError:
+            return {}
+
 
 class DataCollectionAgent:
     def collect_data(self, name, contact_info, linkedin_profile, experience, skills, education):

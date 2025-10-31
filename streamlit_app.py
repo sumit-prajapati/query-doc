@@ -1,5 +1,5 @@
 import streamlit as st
-from agents import DataCollectionAgent, JDAnalysisAgent, ResumeContentAgent, CoverLetterAgent, FormattingAgent
+from agents import CVParserAgent, DataCollectionAgent, JDAnalysisAgent, ResumeContentAgent, CoverLetterAgent, FormattingAgent
 
 # Page title
 st.set_page_config(page_title='AI Resume and Cover Letter Generator', page_icon='🤖')
@@ -10,20 +10,29 @@ st.write("Welcome to the AI-powered Resume and Cover Letter Generator! Fill in y
 # Add a text input for the Gemini API key
 gemini_api_key = st.text_input("Enter your Gemini API Key", type="password")
 
+# CV Uploader
+st.header("Upload your CV")
+uploaded_file = st.file_uploader("Choose a file (.pdf or .docx)", type=["pdf", "docx"])
+
+if uploaded_file is not None and "cv_data" not in st.session_state:
+    with st.spinner("Parsing your CV..."):
+        cv_parser = CVParserAgent()
+        st.session_state.cv_data = cv_parser.parse_cv(uploaded_file, gemini_api_key)
+
 # User Inputs
 st.header("Your Information")
-name = st.text_input("Full Name")
-contact_info = st.text_area("Contact Information (Email, Phone, Address)")
-linkedin_profile = st.text_input("LinkedIn Profile URL")
+name = st.text_input("Full Name", value=st.session_state.get("cv_data", {}).get("full_name", ""))
+contact_info = st.text_area("Contact Information (Email, Phone, Address)", value=st.session_state.get("cv_data", {}).get("contact_info", ""))
+linkedin_profile = st.text_input("LinkedIn Profile URL", value=st.session_state.get("cv_data", {}).get("linkedin_profile", ""))
 
 st.header("Professional Experience")
-experience = st.text_area("Describe your professional experience. Separate each role with a blank line.")
+experience = st.text_area("Describe your professional experience. Separate each role with a blank line.", value=st.session_state.get("cv_data", {}).get("experience", ""))
 
 st.header("Skills")
-skills = st.text_area("List your skills, separated by commas.")
+skills = st.text_area("List your skills, separated by commas.", value=st.session_state.get("cv_data", {}).get("skills", ""))
 
 st.header("Education")
-education = st.text_area("Describe your educational background.")
+education = st.text_area("Describe your educational background.", value=st.session_state.get("cv_data", {}).get("education", ""))
 
 st.header("Target Job")
 job_title = st.text_input("Job Title")
