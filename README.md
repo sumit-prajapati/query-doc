@@ -22,13 +22,7 @@ You will also need a Google Gemini API key. You can get one from the [Google AI 
     ```bash
     cd <project-directory>
     ```
-3.  Create a virual environment and activate the environment
-    ```bash
-    python -m venv <env_name>
-    source <env_name>/bin/activate
-    deactivate
-    ```
-4.  Install the required Python packages using pip:
+3.  Install the required Python packages using pip:
     ```bash
     pip install -r requirements.txt
     ```
