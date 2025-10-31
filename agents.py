@@ -136,7 +136,8 @@ class FormattingAgent:
     def to_pdf(self, text, filename):
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=12)
+        pdf.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
+        pdf.set_font("DejaVu", size=12)
         pdf.multi_cell(0, 10, text)
         pdf.output(filename)
 
